@@ -41,10 +41,11 @@ func (w Waitfor) check_connect() bool {
 }
 
 func (w Waitfor) run_command(cmd []string) bool {
-	fmt.Printf("cmd %s\n", cmd)
 	err := exec.Command(cmd[0], cmd[1:]...).Run()
 	if err != nil {
-		println("error", err)
+		if !w.quiet {
+			println("error", err)
+		}
 		return false
 	}
 	return true
