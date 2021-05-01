@@ -13,7 +13,7 @@ using boost::asio::ip::tcp;
 namespace option {
 DEFINE_bool(quiet, false, "Don't output any status messages");
 DEFINE_bool(strict, false, "Only execute subcommand if the test succeeds");
-DEFINE_bool(dns, false, "resolve check");
+DEFINE_bool(resolve, false, "resolve check");
 DEFINE_int32(timeout, 30, "Timeout in seconds, zero for no timeout");
 DEFINE_double(interval, 1.0, "interval second");
 }  // namespace option
@@ -84,18 +84,18 @@ class waitfor {
         }
     }
 
-    bool run(bool dns, int timeout, float interval) {
+    bool run(bool resolve, int timeout, float interval) {
         if (!quiet) {
-            cout << "check " << (dns ? "dns" : "connect") << " to " << hostport
-                 << ", timeout=" << timeout << ", interval=" << interval
-                 << endl;
+            cout << "check " << (resolve ? "resolve" : "connect") << " to "
+                 << hostport << ", timeout=" << timeout
+                 << ", interval=" << interval << endl;
         }
         std::chrono::milliseconds interval_sec(
             static_cast<int>(interval * 1000));
         chrono::time_point<chrono::system_clock> start =
             chrono::system_clock::now();
         while (true) {
-            if (dns) {
+            if (resolve) {
                 if (check_resolve()) {
                     break;
                 }
@@ -134,7 +134,7 @@ int main(int argc, char **argv) {
             cmd.push_back(argv[i]);
         }
         waitfor runner(hostport, option::FLAGS_quiet);
-        bool result = runner.run(option::FLAGS_dns, option::FLAGS_timeout,
+        bool result = runner.run(option::FLAGS_resolve, option::FLAGS_timeout,
                                  option::FLAGS_interval);
         if (result || !option::FLAGS_strict) {
             runner.run_command(cmd);

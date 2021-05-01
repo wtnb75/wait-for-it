@@ -5,7 +5,7 @@ use std::net::{Shutdown, TcpStream, ToSocketAddrs};
 use std::process;
 use std::{thread, time};
 
-fn check_dns(hostport: &str) -> bool {
+fn check_resolve(hostport: &str) -> bool {
     match hostport.to_socket_addrs() {
         Ok(_) => true,
         Err(_) => false,
@@ -85,18 +85,18 @@ fn main() {
                 .help("Only execute subcommand if the test succeeds"),
         )
         .arg(
-            Arg::with_name("dns")
-                .long("dns")
+            Arg::with_name("resolve")
+                .long("resolve")
                 .required(false)
                 .takes_value(false)
-                .help("dns resolve(no connect)"),
+                .help("test resolve(no connect)"),
         )
         .arg(Arg::with_name("command").required(false).multiple(true));
     let matches = app.get_matches();
     let addr = matches.value_of("hostport").unwrap();
     let timeout: u32 = matches.value_of("timeout").unwrap().parse().unwrap();
     let interval: f32 = matches.value_of("interval").unwrap().parse().unwrap();
-    let dns: bool = matches.is_present("dns");
+    let resolve: bool = matches.is_present("resolve");
     let quiet: bool = matches.is_present("quiet");
     let strict: bool = matches.is_present("strict");
     let command: Vec<&str> = match matches.values_of("command") {
@@ -111,8 +111,8 @@ fn main() {
     }
     let start = time::SystemTime::now();
     loop {
-        if dns {
-            if check_dns(addr) {
+        if resolve {
+            if check_resolve(addr) {
                 if !quiet {
                     println!("resolved after {:?}", start.elapsed().unwrap());
                 }

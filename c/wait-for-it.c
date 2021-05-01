@@ -23,7 +23,7 @@ void show_usage() {
         "USAGE:\n"
         "    wait-for-it [FLAGS] [OPTIONS] <hostport> [command]...\n\n"
         "FLAGS:\n"
-        "        --dns        dns resolve(no connect)\n"
+        "        --resolve    check resolve(no connect)\n"
         "    -h, --help       Prints help information\n"
         "    -q, --quiet      Don't output any status messages\n"
         "    -s, --strict     Only execute subcommand if the test succeeds\n"
@@ -51,12 +51,12 @@ void parse_hostport(char *hostport, char **nodename, char **servname) {
     return;
 }
 
-int check_dns(char *hostport) {
-    // printf("check dns %s\n", hostport);
+int check_resolve(char *hostport) {
+    // printf("check resolve %s\n", hostport);
     struct addrinfo *res;
     char *nodename, *servname;
     parse_hostport(hostport, &nodename, &servname);
-    // printf("dns %s port=%s\n", nodename, servname);
+    // printf("resolve %s port=%s\n", nodename, servname);
     int r = getaddrinfo(nodename, servname, NULL, &res);
     freeaddrinfo(res);
     free(nodename);
@@ -156,7 +156,7 @@ int main(int argc, char **argv) {
         {"strict", no_argument, NULL, 's'},
         {"timeout", required_argument, NULL, 't'},
         {"interval", required_argument, NULL, 'i'},
-        {"dns", no_argument, NULL, 'd'},
+        {"resolve", no_argument, NULL, 'r'},
         {"help", no_argument, NULL, 'h'},
         {"version", no_argument, NULL, 'V'},
         {NULL, 0, NULL, 0},
@@ -164,10 +164,10 @@ int main(int argc, char **argv) {
     int quiet = 0;
     int strict = 0;
     int timeout = 30;
-    int dns = 0;
+    int resolve = 0;
     float interval = 1.0;
     char ch;
-    while ((ch = getopt_long(argc, argv, "qst:i:hV", longopts, NULL)) != -1) {
+    while ((ch = getopt_long(argc, argv, "qst:i:rhV", longopts, NULL)) != -1) {
         switch (ch) {
             case 'q':
                 quiet = 1;
@@ -175,8 +175,8 @@ int main(int argc, char **argv) {
             case 's':
                 strict = 1;
                 break;
-            case 'd':
-                dns = 1;
+            case 'r':
+                resolve = 1;
                 break;
             case 't':
                 timeout = strtol(optarg, NULL, 0);
@@ -204,14 +204,14 @@ int main(int argc, char **argv) {
     char **command = argv;
     if (!quiet) {
         printf(
-            "quiet=%d, strict=%d, timeout=%d, interval=%f, dns=%d, "
+            "quiet=%d, strict=%d, timeout=%d, interval=%f, resolve=%d, "
             "hostport=%s\n",
-            quiet, strict, timeout, interval, dns, hostport);
+            quiet, strict, timeout, interval, resolve, hostport);
     }
     time_t start = time(NULL);
     while (1) {
-        if (dns) {
-            if (!check_dns(hostport)) {
+        if (resolve) {
+            if (!check_resolve(hostport)) {
                 if (!quiet) {
                     printf("resolved after %ld sec.\n", time(NULL) - start);
                 }
