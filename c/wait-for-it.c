@@ -194,7 +194,6 @@ int main(int argc, char **argv) {
     }
     argc -= optind;
     argv += optind;
-    time_t timelimit = time(NULL) + timeout;
     char *hostport = *argv;
     if (hostport == NULL) {
         show_usage();
