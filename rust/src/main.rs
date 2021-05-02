@@ -5,46 +5,92 @@ use std::net::{Shutdown, TcpStream, ToSocketAddrs};
 use std::process;
 use std::{thread, time};
 
-fn check_resolve(hostport: &str) -> bool {
-    match hostport.to_socket_addrs() {
-        Ok(_) => true,
-        Err(_) => false,
-    }
+struct Waitfor<'a> {
+    hostport: &'a str,
+    resolve: bool,
+    strict: bool,
+    quiet: bool,
+    timeout: u64,
+    interval: time::Duration,
 }
 
-fn check_connect(hostport: &str) -> bool {
-    match hostport.to_socket_addrs() {
-        Ok(addrs) => {
-            for addr in addrs.into_iter() {
-                if let Ok(stream) = TcpStream::connect(addr) {
-                    stream.shutdown(Shutdown::Both).expect("shutdown failed");
-                    return true;
+impl Waitfor<'_> {
+    fn check_resolve(&self) -> bool {
+        match self.hostport.to_socket_addrs() {
+            Ok(_) => true,
+            Err(_) => false,
+        }
+    }
+    fn check_connect(&self) -> bool {
+        match self.hostport.to_socket_addrs() {
+            Ok(addrs) => {
+                for addr in addrs.into_iter() {
+                    if let Ok(stream) = TcpStream::connect(addr) {
+                        stream.shutdown(Shutdown::Both).expect("shutdown failed");
+                        return true;
+                    }
+                }
+                return false;
+            }
+            Err(_) => {
+                return false;
+            }
+        }
+    }
+
+    fn run_command(&self, command: Vec<&str>) -> i32 {
+        if command.len() != 0 {
+            if !self.quiet {
+                println!("run {:?}", command);
+            }
+            let cmd = command[0];
+            let mut args = command.clone();
+            args.remove(0);
+            let res = process::Command::new(cmd)
+                .args(args)
+                .spawn()
+                .expect("command")
+                .wait();
+            return res.unwrap().code().unwrap();
+        } else {
+            if !self.quiet {
+                println!("no run");
+            }
+        }
+        0
+    }
+
+    fn run(&self) -> bool {
+        println!(
+            "try to connect addr={}, timeout={}, interval={:?}",
+            self.hostport, self.timeout, self.interval
+        );
+        let start = time::SystemTime::now();
+        loop {
+            if self.resolve {
+                if self.check_resolve() {
+                    if !self.quiet {
+                        println!("resolved after {:?}", start.elapsed().unwrap());
+                    }
+                    break;
+                }
+            } else {
+                if self.check_connect() {
+                    if !self.quiet {
+                        println!("connected after {:?}", start.elapsed().unwrap());
+                    }
+                    break;
                 }
             }
-            return false;
+            if self.timeout != 0 && start.elapsed().unwrap().as_secs() > self.timeout {
+                if !self.quiet {
+                    println!("connect failed");
+                }
+                return false;
+            }
+            thread::sleep(self.interval);
         }
-        Err(_) => {
-            return false;
-        }
-    }
-}
-
-fn run_command(command: Vec<&str>, quiet: bool) {
-    if command.len() != 0 {
-        if !quiet {
-            println!("run {:?}", command);
-        }
-        let cmd = command[0];
-        let mut args = command.clone();
-        args.remove(0);
-        process::Command::new(cmd)
-            .args(args)
-            .spawn()
-            .expect("command");
-    } else {
-        if !quiet {
-            println!("no run");
-        }
+        true
     }
 }
 
@@ -93,8 +139,8 @@ fn main() {
         )
         .arg(Arg::with_name("command").required(false).multiple(true));
     let matches = app.get_matches();
-    let addr = matches.value_of("hostport").unwrap();
-    let timeout: u32 = matches.value_of("timeout").unwrap().parse().unwrap();
+    let hostport = matches.value_of("hostport").unwrap();
+    let timeout: u64 = matches.value_of("timeout").unwrap().parse().unwrap();
     let interval: f32 = matches.value_of("interval").unwrap().parse().unwrap();
     let resolve: bool = matches.is_present("resolve");
     let quiet: bool = matches.is_present("quiet");
@@ -103,39 +149,75 @@ fn main() {
         Some(c) => c.into_iter().collect(),
         None => vec![],
     };
-    if !quiet {
-        println!(
-            "try to connect addr={}, timeout={}, interval={}",
-            addr, timeout, interval
-        );
+    let w = Waitfor {
+        hostport: hostport,
+        timeout: timeout,
+        interval: time::Duration::from_secs_f32(interval),
+        quiet: quiet,
+        resolve: resolve,
+        strict: strict,
+    };
+    let r = w.run();
+    if r || !w.strict {
+        process::exit(w.run_command(command));
     }
-    let start = time::SystemTime::now();
-    loop {
-        if resolve {
-            if check_resolve(addr) {
-                if !quiet {
-                    println!("resolved after {:?}", start.elapsed().unwrap());
-                }
-                break;
-            }
-        } else {
-            if check_connect(addr) {
-                if !quiet {
-                    println!("connected after {:?}", start.elapsed().unwrap());
-                }
-                break;
-            }
-        }
-        if timeout != 0 && start.elapsed().unwrap().as_secs() > timeout as u64 {
-            if !quiet {
-                println!("connect failed");
-            }
-            if !strict {
-                run_command(command, quiet);
-            }
-            process::exit(-1);
-        }
-        thread::sleep(time::Duration::from_secs_f32(interval));
+    if r {
+        process::exit(0);
+    } else {
+        process::exit(1);
     }
-    run_command(command, quiet);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::mem::drop;
+    use std::net::TcpListener;
+
+    #[test]
+    fn test_check_resolve() {
+        let w = Waitfor {
+            hostport: "localhost:9999",
+            timeout: 1,
+            interval: time::Duration::from_secs(0),
+            quiet: false,
+            strict: false,
+            resolve: true,
+        };
+        assert_eq!(true, w.run());
+    }
+
+    #[test]
+    fn test_check_connect() {
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let hostport = format!("localhost:{}", listener.local_addr().unwrap().port());
+        let w = Waitfor {
+            hostport: &hostport,
+            timeout: 1,
+            interval: time::Duration::from_secs(0),
+            quiet: false,
+            strict: false,
+            resolve: false,
+        };
+        assert_eq!(true, w.run());
+        drop(listener);
+        assert_eq!(false, w.run());
+    }
+
+    #[test]
+    fn test_run_command() {
+        let w = Waitfor {
+            hostport: "localhost:9999",
+            timeout: 1,
+            interval: time::Duration::from_secs(0),
+            quiet: false,
+            strict: false,
+            resolve: false,
+        };
+        assert_eq!(0, w.run_command(vec!["true",]));
+        assert_eq!(1, w.run_command(vec!["false",]));
+        let pnc = std::panic::catch_unwind(|| w.run_command(vec!["not-exist", "arg"]));
+        assert!(pnc.is_err());
+        assert_eq!(0, w.run_command(vec![]));
+    }
 }

@@ -19,9 +19,19 @@ class waitforTest : public CPPUNIT_NS::TestFixture {
     CPPUNIT_TEST_SUITE_END();
 
    public:
-    void test_resolve() {}
+    void test_resolve() {
+        auto w = waitfor("localhost:9999", 0);
+        CPPUNIT_ASSERT_EQUAL(true, w.check_resolve());
+        auto w2 = waitfor("non-existent:9999", 0);
+        CPPUNIT_ASSERT_EQUAL(false, w2.check_resolve());
+    }
     void test_connect() {}
-    void test_run_command() {}
+    void test_run_command() {
+        auto w = waitfor("localhost:9999", 0);
+        vector<string> cmd;
+        cmd.push_back("non-existent");
+        w.run_command(cmd);
+    }
     void test_run() {}
 };
 
