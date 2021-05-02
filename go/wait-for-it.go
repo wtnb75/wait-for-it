@@ -1,12 +1,13 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"net"
 	"os"
 	"os/exec"
 	"time"
+
+	flags "github.com/jessevdk/go-flags"
 )
 
 type Waitfor struct {
@@ -82,18 +83,30 @@ func (w Waitfor) run() bool {
 	}
 }
 
+type Options struct {
+	Resolve  bool    `long:"resolve" description:"test resolve(no connect)"`
+	Quiet    bool    `short:"q" long:"quiet" description:"Don't output any status messages"`
+	Strict   bool    `short:"s" long:"strict" description:"Only execute subcommand if the test succeeds"`
+	Timeout  int64   `short:"t" long:"timeout" default:"30" description:"Timeout in seconds, zero for no timeout"`
+	Interval float64 `short:"i" long:"interval" default:"1.0" description:"interval second"`
+	Version  func()  `short:"V" long:"version" description:"Prints version information"`
+}
+
 func main() {
-	var (
-		timeout  = flag.Int64("timeout", 30, "Timeout in seconds, zero for no timeout")
-		interval = flag.Float64("interval", 1.0, "interval second")
-		quiet    = flag.Bool("quiet", false, "Don't output any status messages")
-		strict   = flag.Bool("strict", false, "Only execute subcommand if the test succeeds")
-		resolve  = flag.Bool("resolve", false, "test resolve(no connect)")
-	)
-	flag.Parse()
-	args := flag.Args()
+	var opts Options
+	opts.Version = func() {
+		println("wait-for-it 0.1.0")
+		os.Exit(0)
+	}
+	parser := flags.NewParser(&opts, flags.Default)
+	parser.Name = "wait-for-it"
+	parser.Usage = "[OPTIONS] HOST:PORT"
+	args, err := flags.Parse(&opts)
+	if err != nil {
+		os.Exit(1)
+	}
 	if len(args) == 0 {
-		flag.Usage()
+		parser.WriteHelp(os.Stdout)
 		return
 	}
 	hostport := args[0]
@@ -103,11 +116,11 @@ func main() {
 	}
 	w := Waitfor{
 		hostport: hostport,
-		timeout:  *timeout,
-		quiet:    *quiet,
-		strict:   *strict,
-		resolve:  *resolve,
-		interval: *interval,
+		timeout:  opts.Timeout,
+		quiet:    opts.Quiet,
+		strict:   opts.Strict,
+		resolve:  opts.Resolve,
+		interval: opts.Interval,
 	}
 	res := w.run()
 	if res || !w.strict {
