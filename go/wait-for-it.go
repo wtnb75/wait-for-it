@@ -111,9 +111,6 @@ func main() {
 	}
 	hostport := args[0]
 	cmd := args[1:]
-	if len(cmd) != 0 && cmd[0] == "--" {
-		cmd = cmd[1:]
-	}
 	w := Waitfor{
 		hostport: hostport,
 		timeout:  opts.Timeout,
