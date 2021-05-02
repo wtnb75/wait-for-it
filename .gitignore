@@ -6,3 +6,5 @@
 *~
 *.lock
 */cover*
+*.gcda*
+*.gcno

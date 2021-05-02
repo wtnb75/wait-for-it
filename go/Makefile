@@ -1,6 +1,6 @@
 
 GO = go
-GOFLAGS =
+GOFLAGS = -ldflags="-s -w"
 LDFLAGS =
 LIBS =
 PROGRAM = wait-for-it
@@ -10,7 +10,7 @@ TEST_GOFLAGS = -coverprofile=cover.out
 all: $(PROGRAM)
 
 $(PROGRAM): $(SOURCES)
-	$(GO) build $(SOURCES) $(LDFLAGS) $(LIBS) -o $(PROGRAM)
+	$(GO) build $(GOFLAGS) $(LDFLAGS) $(LIBS) -o $(PROGRAM) $(SOURCES)
 
 clean:
 	rm -f $(PROGRAM) cover.out cover.html

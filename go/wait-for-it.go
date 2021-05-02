@@ -84,11 +84,11 @@ func (w Waitfor) run() bool {
 
 func main() {
 	var (
-		timeout  = flag.Int64("timeout", 30, "")
-		interval = flag.Float64("interval", 1.0, "")
-		quiet    = flag.Bool("quiet", false, "")
-		strict   = flag.Bool("strict", false, "")
-		resolve  = flag.Bool("resolve", false, "")
+		timeout  = flag.Int64("timeout", 30, "Timeout in seconds, zero for no timeout")
+		interval = flag.Float64("interval", 1.0, "interval second")
+		quiet    = flag.Bool("quiet", false, "Don't output any status messages")
+		strict   = flag.Bool("strict", false, "Only execute subcommand if the test succeeds")
+		resolve  = flag.Bool("resolve", false, "test resolve(no connect)")
 	)
 	flag.Parse()
 	args := flag.Args()
