@@ -1,0 +1,8 @@
+*.info
+*.gcno*
+*.gcda*
+cover
+test
+wait-for-it
+wait-for-it.static
+*.o
