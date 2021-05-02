@@ -178,8 +178,8 @@ mod tests {
     fn test_check_resolve() {
         let w = Waitfor {
             hostport: "localhost:9999",
-            timeout: 1,
-            interval: time::Duration::from_secs(0),
+            timeout: 2,
+            interval: time::Duration::from_secs(1),
             quiet: false,
             strict: false,
             resolve: true,
@@ -188,19 +188,46 @@ mod tests {
     }
 
     #[test]
+    fn test_check_resolve_fail() {
+        let w = Waitfor {
+            hostport: "non-existent:9999",
+            timeout: 2,
+            interval: time::Duration::from_secs(1),
+            quiet: false,
+            strict: false,
+            resolve: true,
+        };
+        assert_eq!(false, w.run());
+    }
+
+    #[test]
+    fn test_check_connect_resolvefail() {
+        let w = Waitfor {
+            hostport: "non-existent:9999",
+            timeout: 2,
+            interval: time::Duration::from_secs(1),
+            quiet: false,
+            strict: false,
+            resolve: false,
+        };
+        assert_eq!(false, w.run());
+    }
+
+    #[test]
     fn test_check_connect() {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
         let hostport = format!("localhost:{}", listener.local_addr().unwrap().port());
         let w = Waitfor {
             hostport: &hostport,
-            timeout: 1,
-            interval: time::Duration::from_secs(0),
+            timeout: 2,
+            interval: time::Duration::from_secs(1),
             quiet: false,
             strict: false,
             resolve: false,
         };
         assert_eq!(true, w.run());
         drop(listener);
+        thread::sleep(w.interval);
         assert_eq!(false, w.run());
     }
 
@@ -208,8 +235,8 @@ mod tests {
     fn test_run_command() {
         let w = Waitfor {
             hostport: "localhost:9999",
-            timeout: 1,
-            interval: time::Duration::from_secs(0),
+            timeout: 2,
+            interval: time::Duration::from_secs(1),
             quiet: false,
             strict: false,
             resolve: false,
