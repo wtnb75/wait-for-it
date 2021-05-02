@@ -1,0 +1,11 @@
+/rust/target
+*/wait-for-it
+*/test
+*.o
+*.swp
+*~
+*.lock
+*/cover*
+*.gcda*
+*.gcno
+lcov.info
