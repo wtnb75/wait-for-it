@@ -8,3 +8,4 @@
 */cover*
 *.gcda*
 *.gcno
+lcov.info

@@ -23,7 +23,8 @@ $(PROGRAM_static): $(OBJS)
 
 clean:
 	rm -f $(OBJS) $(PROGRAM) test
-	rm -f *.gcno *.gcov *.gcda *.gch
+	rm -f *.gcno *.gcov *.gcda *.gch lcov.info
+	rm -rf cover
 
 test: wait-for-it.c test_waitfor.c
 	$(CC) test_waitfor.c $(TEST_CFLAGS) $(TEST_LIBDIR) $(TEST_LIBS) -o $@
@@ -33,3 +34,7 @@ check: test
 
 coverage: check
 	gcov test_waitfor.gcda -l
+
+coverage-html: coverage
+	lcov -c -d . -o lcov.info --no-external
+	genhtml lcov.info -o cover
