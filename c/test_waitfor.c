@@ -39,7 +39,7 @@ int get_listen_socket(char *hostport, size_t hostport_len) {
         perror("bind");
         return r1;
     }
-    printf("addr family=%d, len=%d\n", addr.sa_family, addr.sa_len);
+    // printf("addr family=%d, len=%d\n", addr.sa_family, addr.sa_len);
     int r2 = listen(s, 10);
     if (r2 < 0) {
         perror("listen");
@@ -112,7 +112,12 @@ void test_main_resolve_fail() {
 }
 
 int clearopt() {
+#ifdef linux
+    optind = 0;
+#else
+    optind = 1;
     optreset = 1;
+#endif
     return 0;
 }
 

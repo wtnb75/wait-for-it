@@ -13,7 +13,7 @@ $(PROGRAM): $(SOURCES)
 	$(GO) build $(GOFLAGS) $(LDFLAGS) $(LIBS) -o $(PROGRAM) $(SOURCES)
 
 dep:
-	$(GO) get -d ./...
+	$(GO) mod download
 
 clean:
 	rm -f $(PROGRAM) cover.out cover.html
