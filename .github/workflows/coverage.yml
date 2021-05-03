@@ -1,6 +1,6 @@
 on: [push]
 
-name: rust
+name: coverage
 
 jobs:
   rust:
@@ -81,6 +81,7 @@ jobs:
         name: cpp
         path: cpp/cover/
   pages:
+    if: ${{ github.ref == 'refs/heads/main' }}
     name: upload coverage data
     needs: [c, cpp, rust, golang]
     runs-on: ubuntu-latest
