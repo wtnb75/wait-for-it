@@ -15,6 +15,7 @@ jobs:
         override: true
     - name: coverage
       run: |
+        cargo install cargo-cov
         make -C rust coverage-html
         mkdir -p pages/rust/
         cp -a rust/cover/* pages/rust/
@@ -33,6 +34,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - name: install deps
+      run: sudo apt-get install libcunit1-dev
     - name: coverage
       run: |
         make -C c coverage-html
@@ -43,6 +46,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - name: install deps
+      run: sudo apt-get install libcppunit-dev
     - name: coverage
       run: |
         make -C cpp coverage-html
