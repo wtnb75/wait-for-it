@@ -20,7 +20,6 @@ jobs:
         cargo install cargo-cov
         make -C rust coverage
         mkdir -p pages/rust/
-        ls -l rust/target/cov/build/gc*
         cp -a rust/target/cov/report/* pages/rust/
   golang:
     name: Golang

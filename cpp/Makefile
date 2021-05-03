@@ -4,11 +4,11 @@ CXX = g++
 CFLAGS = -Wall
 CXXFLAGS = -Wall -std=c++11
 LDFLAGS =
-LIBS = -lgflags
+LIBS = -lgflags -lpthread
 PROGRAM = wait-for-it
 OBJS = wait-for-it.o
 TEST_CFLAGS = -fprofile-arcs -ftest-coverage -Wall -std=c++11
-TEST_LIBS = -lcppunit -lgflags
+TEST_LIBS = -lcppunit -lgflags -lpthread
 PROGRAM_static = wait-for-it.static
 LIBS_static =
 LDFLAGS_static =
