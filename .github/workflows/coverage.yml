@@ -47,10 +47,11 @@ jobs:
     - run: |
         make -C go dep
         make -C go coverage
+        cp go/cover.html go/index.html
     - uses: actions/upload-artifact@v2
       with:
         name: golang
-        path: go/cover.html
+        path: go/index.html
   c:
     name: C
     runs-on: ubuntu-latest
