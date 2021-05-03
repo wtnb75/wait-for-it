@@ -1,6 +1,7 @@
 /rust/target
 */wait-for-it
 */test
+*/test.dSYM
 *.o
 *.swp
 *~

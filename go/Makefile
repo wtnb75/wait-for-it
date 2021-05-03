@@ -12,11 +12,15 @@ all: $(PROGRAM)
 $(PROGRAM): $(SOURCES)
 	$(GO) build $(GOFLAGS) $(LDFLAGS) $(LIBS) -o $(PROGRAM) $(SOURCES)
 
+dep:
+	$(GO) mod download
+
 clean:
 	rm -f $(PROGRAM) cover.out cover.html
 
 test: $(SOURCES)
-	GO111MODULE=auto $(GO) test $(TEST_GOFLAGS)
+	$(GO) test $(TEST_GOFLAGS)
 
 coverage: test
-	go tool cover -html=cover.out -o cover.html
+	sed -e 's,wait-for-it.go/wait-for-it.go,./wait-for-it.go,g;' cover.out > cover.out2
+	go tool cover -html=cover.out2 -o cover.html

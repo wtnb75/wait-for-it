@@ -8,3 +8,6 @@ edition = "2018"
 
 [dependencies]
 clap = "2.20.3"
+
+[dev-dependencies]
+cargo-cov = "0.0.5"
