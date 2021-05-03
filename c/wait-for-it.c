@@ -58,7 +58,6 @@ int check_resolve(char *hostport) {
     parse_hostport(hostport, &nodename, &servname);
     // printf("resolve %s port=%s\n", nodename, servname);
     int r = getaddrinfo(nodename, servname, NULL, &res);
-    freeaddrinfo(res);
     free(nodename);
     if (servname != NULL) {
         free(servname);
@@ -67,6 +66,7 @@ int check_resolve(char *hostport) {
         // printf("error(%d) %s\n", r, gai_strerror(r));
         return -1;
     }
+    freeaddrinfo(res);
     return 0;
 }
 

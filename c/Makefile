@@ -27,7 +27,7 @@ clean:
 	rm -rf cover
 
 test: wait-for-it.c test_waitfor.c
-	$(CC) test_waitfor.c $(TEST_CFLAGS) $(TEST_LIBDIR) $(TEST_LIBS) -o $@
+	$(CC) -g test_waitfor.c $(TEST_CFLAGS) $(TEST_LIBDIR) $(TEST_LIBS) -o $@
 
 check: test
 	@./test
