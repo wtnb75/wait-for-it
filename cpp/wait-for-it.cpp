@@ -72,7 +72,7 @@ class waitfor {
         args[cmd.size()] = NULL;
         if (!quiet) {
             cout << "run";
-            for (int i = 0; i < cmd.size(); i++) {
+            for (vector<string>::size_type i = 0; i < cmd.size(); i++) {
                 cout << " " << cmd.at(i);
                 args[i] = strdup(cmd.at(i).c_str());
             }

@@ -18,9 +18,10 @@ jobs:
     - name: coverage
       run: |
         cargo install cargo-cov
-        make -C rust coverage-html
+        make -C rust coverage
         mkdir -p pages/rust/
-        cp -a rust/cover/* pages/rust/
+        ls -l rust/target/cov/build/gc*
+        cp -a rust/target/cov/report/* pages/rust/
   golang:
     name: Golang
     runs-on: ubuntu-latest
@@ -40,7 +41,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: install deps
-      run: sudo apt-get install libcunit1-dev
+      run: sudo apt-get install libcunit1-dev lcov
     - name: coverage
       run: |
         make -C c coverage-html
@@ -52,7 +53,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: install deps
-      run: sudo apt-get install libcppunit-dev libgflags-dev libboost-dev
+      run: sudo apt-get install libcppunit-dev libgflags-dev libboost-dev lcov
     - name: coverage
       run: |
         make -C cpp coverage-html

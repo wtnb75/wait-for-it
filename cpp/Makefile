@@ -29,7 +29,7 @@ clean:
 	rm -rf cover
 
 test: wait-for-it.cpp test_waitfor.cpp
-	$(CXX) test_waitfor.cpp $(TEST_CFLAGS) $(TEST_LIBDIR) $(TEST_LIBS) -o $@
+	$(CXX) -g test_waitfor.cpp $(TEST_CFLAGS) $(TEST_LIBDIR) $(TEST_LIBS) -o $@
 
 check: test
 	@./test
