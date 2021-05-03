@@ -15,6 +15,13 @@ jobs:
         toolchain: stable
         default: true
         override: true
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
     - name: coverage
       run: |
         cargo install cargo-cov
@@ -29,6 +36,12 @@ jobs:
     - uses: actions/setup-go@v1
       with:
         go-version: 1.16
+    - uses: actions/cache@v2
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
     - run: |
         make -C go dep
         make -C go coverage
@@ -63,6 +76,7 @@ jobs:
     needs: [c, cpp, rust, golang]
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v2
     - uses: actions/setup-python@v2
       with:
         python-version: '3.x'
