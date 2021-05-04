@@ -21,19 +21,12 @@ type Waitfor struct {
 
 func (w Waitfor) check_resolve() bool {
 	_, err := net.ResolveTCPAddr("tcp", w.hostport)
-	if err == nil {
-		return true
-	}
-	return false
+	return err == nil
 }
 
 func (w Waitfor) check_connect() bool {
-	addr, err := net.ResolveTCPAddr("tcp", w.hostport)
-	if err != nil {
-		return false
-	}
-	myaddr := new(net.TCPAddr)
-	conn, err := net.DialTCP("tcp", myaddr, addr)
+	dialer := net.Dialer{Timeout: time.Duration(float64(time.Second) * w.interval / 2)}
+	conn, err := dialer.Dial("tcp", w.hostport)
 	if err != nil {
 		return false
 	}

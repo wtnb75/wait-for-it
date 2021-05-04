@@ -1,4 +1,6 @@
 #include <arpa/inet.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <getopt.h>
 #include <netdb.h>
 #include <stdio.h>
@@ -94,7 +96,7 @@ char *ip2str(const struct sockaddr *sa, char *s, size_t maxlen) {
     return s;
 }
 
-int check_connect(char *hostport) {
+int check_connect(char *hostport, float timeout_sec) {
     int ret = -1;
     struct addrinfo *res;
     struct addrinfo hint = {
@@ -122,7 +124,43 @@ int check_connect(char *hostport) {
         if (s < 0) {
             continue;
         }
+        struct timeval tv;
+        tv.tv_sec = (int)(timeout_sec);
+        tv.tv_usec = (int)(timeout_sec / 1000000.0);
+        int r0 =
+            setsockopt(s, SOL_SOCKET, SO_SNDTIMEO, (char *)&tv, sizeof(tv));
+        if (r0 < 0) {
+            perror("setsockopt");
+        }
+        int flag = fcntl(s, F_GETFL, NULL);
+        if (flag < 0) {
+            perror("fcntl(GETFL)");
+        } else {
+            flag |= O_NONBLOCK;
+            int r1 = fcntl(s, F_SETFL, flag);
+            if (r1 < 0) {
+                perror("fcntl(SETFL)");
+            }
+        }
         int r = connect(s, i->ai_addr, i->ai_addrlen);
+        if (r < 0 && errno == EINPROGRESS) {
+            struct timeval tv;
+            tv.tv_sec = (int)(timeout_sec);
+            tv.tv_usec = (int)(timeout_sec / 1000000.0);
+            fd_set sset, eset, rset;
+            FD_ZERO(&sset);
+            FD_ZERO(&rset);
+            FD_ZERO(&eset);
+            FD_SET(s, &sset);
+            FD_SET(s, &rset);
+            FD_SET(s, &eset);
+            int res = select(s + 1, &rset, &sset, &eset, &tv);
+            if (res > 0 && FD_ISSET(s, &sset) && !FD_ISSET(s, &eset) &&
+                !FD_ISSET(s, &rset)) {
+                // connected
+                r = res;
+            }
+        }
         close(s);
         if (r < 0) {
             continue;
@@ -217,7 +255,7 @@ int main(int argc, char **argv) {
                 break;
             }
         } else {
-            if (!check_connect(hostport)) {
+            if (!check_connect(hostport, interval / 2)) {
                 if (!quiet) {
                     printf("connected after %ld sec.\n", time(NULL) - start);
                 }

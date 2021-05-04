@@ -22,10 +22,11 @@ impl Waitfor<'_> {
         }
     }
     fn check_connect(&self) -> bool {
+        let timeout = self.interval / 2;
         match self.hostport.to_socket_addrs() {
             Ok(addrs) => {
                 for addr in addrs.into_iter() {
-                    if let Ok(stream) = TcpStream::connect(addr) {
+                    if let Ok(stream) = TcpStream::connect_timeout(&addr, timeout) {
                         stream.shutdown(Shutdown::Both).expect("shutdown failed");
                         return true;
                     }
