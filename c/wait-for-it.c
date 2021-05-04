@@ -149,9 +149,11 @@ int check_connect(char *hostport, float timeout_sec) {
             tv.tv_usec = (int)(timeout_sec / 1000000.0);
             fd_set sset, eset, rset;
             FD_ZERO(&sset);
+            FD_ZERO(&rset);
+            FD_ZERO(&eset);
             FD_SET(s, &sset);
-            FD_COPY(&sset, &eset);
-            FD_COPY(&sset, &rset);
+            FD_SET(s, &rset);
+            FD_SET(s, &eset);
             int res = select(s + 1, &rset, &sset, &eset, &tv);
             if (res > 0 && FD_ISSET(s, &sset) && !FD_ISSET(s, &eset) &&
                 !FD_ISSET(s, &rset)) {
