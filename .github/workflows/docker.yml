@@ -6,6 +6,8 @@ on:
 
 jobs:
   buildx:
+    env:
+      latest: c
     strategy:
       matrix:
         tags: [c, cpp, rust, go]
@@ -44,3 +46,13 @@ jobs:
          context: ${{ matrix.tags }}
          file: ${{ matrix.tags }}/Dockerfile
          tags: ghcr.io/${{ github.repository_owner }}/wait-for-it:${{ matrix.tags }}
+     - name: build and push (latest)
+       uses: docker/build-push-action@v2
+       if: ${{ matrix.tags == env.latest }}
+       with:
+         platforms: ${{ steps.buildx.outputs.platforms }}
+         #platforms: linux/amd64,linux/arm64,linux/arm/v7
+         push: true
+         context: ${{ matrix.tags }}
+         file: ${{ matrix.tags }}/Dockerfile
+         tags: ghcr.io/${{ github.repository_owner }}/wait-for-it:latest
