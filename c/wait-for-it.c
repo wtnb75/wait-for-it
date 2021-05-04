@@ -255,7 +255,7 @@ int main(int argc, char **argv) {
                 break;
             }
         } else {
-            if (!check_connect(hostport, interval)) {
+            if (!check_connect(hostport, interval / 2)) {
                 if (!quiet) {
                     printf("connected after %ld sec.\n", time(NULL) - start);
                 }
