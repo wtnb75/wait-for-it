@@ -63,10 +63,10 @@ void test_check_connect() {
         return;
     }
     CU_ASSERT_NOT_EQUAL(-1, sock);
-    CU_ASSERT_EQUAL(0, check_connect(hostport));
+    CU_ASSERT_EQUAL(0, check_connect(hostport, 1.0));
     close(sock);
-    CU_ASSERT_NOT_EQUAL(0, check_connect(hostport));
-    CU_ASSERT_NOT_EQUAL(0, check_connect("hello-nonexistent:2000"));
+    CU_ASSERT_NOT_EQUAL(0, check_connect(hostport, 1.0));
+    CU_ASSERT_NOT_EQUAL(0, check_connect("hello-nonexistent:2000", 1.0));
 }
 
 void test_main_connect() {
