@@ -72,7 +72,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: install deps
-      run: sudo apt-get install libcppunit-dev libgflags-dev libboost-dev lcov
+      run: sudo apt-get install libcppunit-dev libboost-dev libboost-program-options-dev lcov
     - name: coverage
       run: |
         make -C cpp coverage-html
