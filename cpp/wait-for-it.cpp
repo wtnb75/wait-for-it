@@ -1,7 +1,6 @@
-#include <gflags/gflags.h>
-
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
+#include <boost/program_options.hpp>
 #include <chrono>
 #include <iostream>
 #include <string>
@@ -9,14 +8,6 @@
 
 using namespace std;
 using boost::asio::ip::tcp;
-
-namespace option {
-DEFINE_bool(quiet, false, "Don't output any status messages");
-DEFINE_bool(strict, false, "Only execute subcommand if the test succeeds");
-DEFINE_bool(resolve, false, "resolve check");
-DEFINE_int32(timeout, 30, "Timeout in seconds, zero for no timeout");
-DEFINE_double(interval, 1.0, "interval second");
-}  // namespace option
 
 class waitfor {
     string hostport;
@@ -97,10 +88,23 @@ class waitfor {
         while (true) {
             if (resolve) {
                 if (check_resolve()) {
+                    if (!quiet) {
+                        cout << "resolved "
+                             << (chrono::system_clock::now() - start).count() /
+                                    1000000.0
+                             << " sec." << endl;
+                    }
                     break;
                 }
             } else {
                 if (check_connect()) {
+                    if (!quiet) {
+                        cout << "connected "
+                             << (chrono::system_clock::now() - start).count() /
+                                    1000000.0
+                             << " sec." << endl;
+                        ;
+                    }
                     break;
                 }
             }
@@ -121,22 +125,39 @@ class waitfor {
 };
 
 int main(int argc, char **argv) {
-    gflags::SetUsageMessage("wait for connection");
-    gflags::ParseCommandLineFlags(&argc, &argv, true);
+    using namespace boost::program_options;
 
-    if (argc != 1) {
-        string hostport(argv[1]);
-        vector<string> cmd;
-        for (int i = 2; i < argc; i++) {
-            if (i == 2 && string(argv[i]) == string("--")) {
-                continue;
-            }
-            cmd.push_back(argv[i]);
-        }
-        waitfor runner(hostport, option::FLAGS_quiet);
-        bool result = runner.run(option::FLAGS_resolve, option::FLAGS_timeout,
-                                 option::FLAGS_interval);
-        if (result || !option::FLAGS_strict) {
+    options_description optdesc("wait-for-it");
+    optdesc.add_options()("help,h", "show this help");
+    optdesc.add_options()("strict,s", "strict option");
+    optdesc.add_options()("quiet,q", "be quiet option");
+    optdesc.add_options()("resolve", "resolve only");
+    optdesc.add_options()("version,v", "version option");
+    optdesc.add_options()("timeout,t", value<int>()->default_value(30),
+                          "timeout value");
+    optdesc.add_options()("interval,i", value<float>()->default_value(1.0),
+                          "interval option");
+    variables_map vm;
+    auto const parsed = parse_command_line(argc, argv, optdesc);
+    store(parsed, vm);
+    notify(vm);
+    if (vm.count("help")) {
+        cout << optdesc << endl;
+        return 0;
+    }
+    if (vm.count("version")) {
+        cout << "wait-for-it 0.1.0" << endl;
+        return 0;
+    }
+    auto args = collect_unrecognized(parsed.options, include_positional);
+
+    if (args.size() != 0) {
+        string hostport = args[0];
+        vector<string> cmd(args.begin() + 1, args.end());
+        waitfor runner(hostport, vm.count("quiet"));
+        bool result = runner.run(vm.count("resolve"), vm["timeout"].as<int>(),
+                                 vm["interval"].as<float>());
+        if (result || !vm.count("strict")) {
             runner.run_command(cmd);
         }
         return result ? 0 : 1;
