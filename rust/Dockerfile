@@ -1,7 +1,7 @@
 FROM rust:1-alpine as dev
 RUN mkdir src
 ADD . /src
-RUN cd /src && cargo build --release
+RUN cd /src && cargo build --release -Z sparse-registry
 RUN cd /src && strip target/release/wait-for-it
 
 FROM scratch
