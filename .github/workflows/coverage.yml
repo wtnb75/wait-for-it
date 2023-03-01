@@ -81,7 +81,7 @@ jobs:
         name: cpp
         path: cpp/cover/
   pages:
-    if: ${{ github.ref == 'refs/heads/fix' }}
+    if: ${{ github.ref == 'refs/heads/main' }}
     name: upload coverage data
     needs: [c, cpp, rust, golang]
     runs-on: ubuntu-latest
