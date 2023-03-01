@@ -1,0 +1,231 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>.: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">./wait-for-it.go (22.8%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package main
+
+import (
+        "fmt"
+        "net"
+        "os"
+        "os/exec"
+        "time"
+
+        flags "github.com/jessevdk/go-flags"
+)
+
+type Waitfor struct {
+        hostport string
+        resolve  bool
+        quiet    bool
+        strict   bool
+        timeout  int64
+        interval float64
+}
+
+func (w Waitfor) check_resolve() bool <span class="cov8" title="1">{
+        _, err := net.ResolveTCPAddr("tcp", w.hostport)
+        return err == nil
+}</span>
+
+func (w Waitfor) check_connect() bool <span class="cov8" title="1">{
+        dialer := net.Dialer{Timeout: time.Duration(float64(time.Second) * w.interval / 2)}
+        conn, err := dialer.Dial("tcp", w.hostport)
+        if err != nil </span><span class="cov8" title="1">{
+                return false
+        }</span>
+        <span class="cov8" title="1">conn.Close()
+        return true</span>
+}
+
+func (w Waitfor) run_command(cmd []string) bool <span class="cov8" title="1">{
+        err := exec.Command(cmd[0], cmd[1:]...).Run()
+        if err != nil </span><span class="cov8" title="1">{
+                if !w.quiet </span><span class="cov0" title="0">{
+                        println("error", err)
+                }</span>
+                <span class="cov8" title="1">return false</span>
+        }
+        <span class="cov8" title="1">return true</span>
+}
+
+func (w Waitfor) run() bool <span class="cov0" title="0">{
+        if !w.quiet </span><span class="cov0" title="0">{
+                println("wait for", w.hostport, w.timeout, "sec")
+        }</span>
+        <span class="cov0" title="0">start := time.Now()
+        for </span><span class="cov0" title="0">{
+                if w.resolve </span><span class="cov0" title="0">{
+                        if w.check_resolve() </span><span class="cov0" title="0">{
+                                if !w.quiet </span><span class="cov0" title="0">{
+                                        println("resolved", w.hostport)
+                                }</span>
+                                <span class="cov0" title="0">return true</span>
+                        }
+                } else<span class="cov0" title="0"> {
+                        if w.check_connect() </span><span class="cov0" title="0">{
+                                if !w.quiet </span><span class="cov0" title="0">{
+                                        println("connected", w.hostport)
+                                }</span>
+                                <span class="cov0" title="0">return true</span>
+                        }
+                }
+                <span class="cov0" title="0">if w.timeout != 0 &amp;&amp; time.Now().Sub(start) &gt; time.Duration(int64(time.Second)*w.timeout) </span><span class="cov0" title="0">{
+                        if !w.quiet </span><span class="cov0" title="0">{
+                                println("timeout", w.hostport)
+                        }</span>
+                        <span class="cov0" title="0">return false</span>
+                }
+                <span class="cov0" title="0">time.Sleep(time.Duration(float64(time.Second) * w.interval))</span>
+        }
+}
+
+type Options struct {
+        Resolve  bool    `long:"resolve" description:"test resolve(no connect)"`
+        Quiet    bool    `short:"q" long:"quiet" description:"Don't output any status messages"`
+        Strict   bool    `short:"s" long:"strict" description:"Only execute subcommand if the test succeeds"`
+        Timeout  int64   `short:"t" long:"timeout" default:"30" description:"Timeout in seconds, zero for no timeout"`
+        Interval float64 `short:"i" long:"interval" default:"1.0" description:"interval second"`
+        Version  func()  `short:"V" long:"version" description:"Prints version information"`
+}
+
+func main() <span class="cov0" title="0">{
+        var opts Options
+        opts.Version = func() </span><span class="cov0" title="0">{
+                println("wait-for-it 0.1.0")
+                os.Exit(0)
+        }</span>
+        <span class="cov0" title="0">parser := flags.NewParser(&amp;opts, flags.Default)
+        parser.Name = "wait-for-it"
+        parser.Usage = "[OPTIONS] HOST:PORT"
+        args, err := flags.Parse(&amp;opts)
+        if err != nil </span><span class="cov0" title="0">{
+                os.Exit(1)
+        }</span>
+        <span class="cov0" title="0">if len(args) == 0 </span><span class="cov0" title="0">{
+                parser.WriteHelp(os.Stdout)
+                return
+        }</span>
+        <span class="cov0" title="0">hostport := args[0]
+        cmd := args[1:]
+        w := Waitfor{
+                hostport: hostport,
+                timeout:  opts.Timeout,
+                quiet:    opts.Quiet,
+                strict:   opts.Strict,
+                resolve:  opts.Resolve,
+                interval: opts.Interval,
+        }
+        res := w.run()
+        if res || !w.strict </span><span class="cov0" title="0">{
+                if !w.quiet </span><span class="cov0" title="0">{
+                        fmt.Printf("run %s\n", cmd)
+                }</span>
+                <span class="cov0" title="0">if len(cmd) != 0 </span><span class="cov0" title="0">{
+                        w.run_command(cmd)
+                }</span>
+        }
+        <span class="cov0" title="0">if res </span><span class="cov0" title="0">{
+                os.Exit(0)
+        }</span>
+        <span class="cov0" title="0">os.Exit(1)</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
